@@ -27,17 +27,25 @@ class AuthController extends Controller
 
         $credentials = $request->only('email', 'password');
 
-        if (!Auth::attempt($credentials)) {
-            return response()->json(['message' => 'Invalid Credentials'], 401);
+        // Check if the email exists in the database
+        $user = User::where('email', $credentials['email'])->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'The email address is not registered.'], 404);
         }
 
+        // If email exists, check the password
+        if (!Auth::attempt($credentials)) {
+            return response()->json(['message' => 'The password is incorrect.'], 401);
+        }
+
+        // Authentication passed, return success response
         $user = Auth::user();
         return response()->json([
             'status' => 'success',
             'user' => $user
         ]);
-    }
-    /* Register API */
+    }/* Register API */
     public function register(Request $request)
     {
         $validator = Validator::make(
@@ -70,6 +78,12 @@ class AuthController extends Controller
             'message' => 'User Registered Successfully',
             'user' => $user,
         ]);
+    }
+
+    public function logout(Request $request)
+    {
+        Auth::logout();
+        return response()->json(['message' => 'Logged out successfully']);
     }
 
     public function getUsers(Request $request)
