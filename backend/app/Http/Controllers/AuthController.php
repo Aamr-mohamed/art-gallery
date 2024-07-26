@@ -103,18 +103,42 @@ class AuthController extends Controller
         $user->delete();
         return response()->json(['message' => 'User deleted', 'user' => $user]);
     }
-    public function updateUser(Request $request)
+    public function updateUser(Request $request, $id)
     {
-        $user = User::find($request->id);
+        $user = User::find($id);
+
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
         }
-        $data = $request->all();
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'sometimes|string|max:255|nullable',
+            'email' => 'sometimes|email|unique:users,email,' . $id . '|nullable',
+            'phone' => 'sometimes|string|max:20|nullable',
+            'address' => 'sometimes|string|nullable',
+            'role' => 'sometimes|string|nullable',
+            'password' => 'sometimes|nullable|confirmed|min:8',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $data = $request->only(['name', 'email', 'phone', 'address', 'role']);
+
+        $data = array_filter($data, function ($value) {
+            return !is_null($value);
+        });
+
         if ($request->has('password')) {
-            $data['password'] = Hash::make($request->password);
+            $data['password'] = Hash::make($request->input('password'));
         }
 
         $user->update($data);
-        return response()->json(['message' => 'User updated', 'user' => $user]);
+
+        return response()->json([
+            'message' => 'User updated successfully',
+            'user' => $user
+        ]);
     }
 }
