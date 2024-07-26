@@ -26,7 +26,7 @@ export const SidebarData = [
   },
   {
 	title: "Products",
-	path: "#",
+	path: "/adminpanel/products",
 	icon: <BsIcons.BsBox2HeartFill />,
 	cName: "nav-text",
   },

@@ -23,6 +23,12 @@ class Product extends Model
         'status'
     ];
 
+    protected static function booted()
+    {
+        static::saving(function ($product) {
+            $product->status = $product->stock > 0 ? '1' : '0';
+        });
+    }
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
