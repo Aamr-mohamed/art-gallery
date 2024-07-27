@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\OrderController;
 
 
 /*
@@ -36,4 +37,11 @@ Route::controller(ProductController::class)->group(function () {
     Route::post('products', 'store');
     Route::patch('products/{id}', 'update');
     Route::delete('products/{id}', 'destroy');
+});
+
+// Order routes
+Route::controller(OrderController::class)->group(function () {
+    Route::get('orders', 'index');
+    Route::get('orders/{id}', 'show');
+    Route::patch('orders/{id}', 'updateStatus');
 });
