@@ -20,7 +20,7 @@ export const SidebarData = [
   },
   {
 	title: "Orders",
-	path: "#",
+	path: "/adminpanel/orders",
 	icon: <FaIcons.FaShoppingCart />,
 	cName: "nav-text",
   },
