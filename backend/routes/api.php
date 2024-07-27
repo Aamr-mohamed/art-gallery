@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProductController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -25,4 +27,13 @@ Route::controller(AuthController::class)->group(function () {
     Route::get('user/{id}', 'getUserById');
     Route::delete('user/{id}', 'deleteUser');
     Route::patch('user/{id}', 'updateUser');
+});
+
+// Product routes
+Route::controller(ProductController::class)->group(function () {
+    Route::get('products', 'index');
+    Route::get('products/{id}', 'show');
+    Route::post('products', 'store');
+    Route::patch('products/{id}', 'update');
+    Route::delete('products/{id}', 'destroy');
 });
