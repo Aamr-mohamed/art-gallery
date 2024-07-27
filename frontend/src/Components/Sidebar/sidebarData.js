@@ -14,7 +14,7 @@ export const SidebarData = [
   },
   {
 	title: "Customers",
-	path: "#",
+	path: "/adminpanel/customers",
 	icon: <ImIcons.ImAccessibility />,
 	cName: "nav-text",
   },
