@@ -15,7 +15,7 @@ const UserTable = ({ data, onDelete }) => {
     });
   };
   return (
-    <table className="table-auto w-full text-left">
+    <table className="table-auto w-full text-left bg-white">
       <thead>
         <tr>
           <th className="px-4 py-2">ID</th>

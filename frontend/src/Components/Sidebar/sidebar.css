@@ -1,12 +1,13 @@
 .nav-menu {
-  height: 100vh;
+  min-height: 100vh;
+  height: 100%;
   display: flex;
   justify-content: center;
 }
 
 .nav-text {
   display: flex;
-  justify-content: start;
+  justify-content: center;
   /* align-items: center; */
   /* padding: 8px 0px 8px 0px; */
   list-style: none;
@@ -15,7 +16,7 @@
 
 .nav-text a {
   text-decoration: none;
-  color: white;
+  /* color: white; */
   font-size: 18px;
   width: 95%;
   height: 100%;

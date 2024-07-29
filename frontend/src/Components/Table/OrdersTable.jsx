@@ -2,7 +2,7 @@ import React from "react";
 
 const OrdersTable = ({ data, onStatusUpdate }) => {
   return (
-    <table className="table-auto w-full text-left">
+    <table className="table-auto w-full text-left bg-white">
       <thead>
         <tr>
           <th className="px-4 py-2">Order Number</th>
