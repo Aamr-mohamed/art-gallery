@@ -189,7 +189,7 @@ export default function Register() {
                   )}
 
                   <div>
-                    <label class="text-gray-800 text-sm mb-2 block">
+                    <label className="text-gray-800 text-sm mb-2 block">
                       Password
                     </label>
                     <input
@@ -209,7 +209,7 @@ export default function Register() {
                   )}
                 </div>
 
-                <div class="!mt-12">
+                <div className="!mt-12">
                   <button
                     type="submit"
                     className="w-full py-3 px-4 text-sm tracking-wider font-semibold rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none"
