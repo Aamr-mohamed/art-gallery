@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\CartController;
 
 
 /*
@@ -21,6 +22,8 @@ use App\Http\Controllers\OrderController;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+// Route::middleware('auth:sanctum')->get('/check-auth', [AuthController::class, 'checkAuth']);
+
 Route::controller(AuthController::class)->group(function () {
     Route::post('register', 'register');
     Route::post('login', 'login');
@@ -28,6 +31,8 @@ Route::controller(AuthController::class)->group(function () {
     Route::get('user/{id}', 'getUserById');
     Route::delete('user/{id}', 'deleteUser');
     Route::patch('user/{id}', 'updateUser');
+    Route::get('/check-auth','checkAuth');
+
 });
 
 // Product routes
@@ -45,3 +50,12 @@ Route::controller(OrderController::class)->group(function () {
     Route::get('orders/{id}', 'show');
     Route::patch('orders/{id}', 'updateStatus');
 });
+
+Route::controller(CartController::class)->group(function () {
+    Route::post('/cart', 'addToCart');
+    Route::get('/cart', 'getCart');
+    Route::put('/cart/{id}', 'updateCart');
+    Route::delete('/cart/{id}', 'removeFromCart');
+});
+
+
