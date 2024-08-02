@@ -10,6 +10,8 @@ import Orders from "./Pages/AdminPanel/Orders";
 import ProductsPage from "./Pages/Products/products";
 import ProductDetails from "./Pages/ProductDetails/productDetails";
 import ShoppingCart from "./Pages/ShoppingCart/ShoppingCart";
+import Checkout from "./Pages/Checkout/Checkout";
+import OrderConfirmationPage from "./Pages/OrderConfirmation/OrderConfirmation";
 
 function App() {
 	return (
@@ -24,6 +26,8 @@ function App() {
 				<Route path="/products" element={<ProductsPage />} />
 				<Route path="/productdetails/:productId" element={<ProductDetails />} />
 				<Route path="/cart" element={<ShoppingCart />} />
+				<Route path="/checkout" element={<Checkout />} />
+				<Route path="/order-confirmation/:orderId" element={<OrderConfirmationPage />} />
 				<Route path="/login" element={<Login />} />
 				<Route path="/register" element={<Register />} />
 			</Routes>
