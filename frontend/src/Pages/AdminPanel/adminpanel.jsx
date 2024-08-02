@@ -111,7 +111,8 @@ export default function AdminPanel() {
 		async function fetchOrders() {
 			try {
 				const response = await axios.get(`${backendUrl}/orders`);
-				setOrders(response.data.orders.slice(0, 5));
+				console.log(response.data);
+				setOrders(response.data.slice(0, 5));
 			} catch (error) {
 				customToast("error", error.message);
 			}
