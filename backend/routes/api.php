@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
 
 
 /*
@@ -58,4 +59,4 @@ Route::controller(CartController::class)->group(function () {
     Route::delete('/cart/{id}', 'removeFromCart');
 });
 
-
+Route::post('/checkout', [CheckoutController::class, 'checkout']);
