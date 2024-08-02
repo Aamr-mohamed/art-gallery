@@ -4,6 +4,8 @@ import Navbar from "../../Components/Navbar/navbar";
 import Footer from "../../Components/Footer/footer";
 import axios from "axios";
 import { useCart } from "../../Components/Cart/CartContext";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function ShoppingCart() {
   const [productDetails, setProductDetails] = useState({});
@@ -44,17 +46,15 @@ export default function ShoppingCart() {
         params: { user_id: userId },
         withCredentials: true,
       });
-      // Ensure each item has an ID
       const cartWithIds = response.data.cart.map((item) => ({
         ...item,
-        id: item.id, // Ensure the cart item has an ID field
+        id: item.id,
       }));
       setCart(cartWithIds);
     } catch (error) {
       console.error("Failed to fetch cart from server:", error);
     }
   };
-
 
   const fetchProductDetails = async () => {
     const productIds = [...new Set(cart.map((item) => item.product_id))];
@@ -73,20 +73,38 @@ export default function ShoppingCart() {
     }
   };
 
-  const handleQuantityChange = async (cartItemId, quantity) => {
+  const handleQuantityChange = async (cartItemId, amount) => {
     const user = JSON.parse(localStorage.getItem("user"));
+    const product = productDetails[cartItemId.product_id];
+    const maxStock = product?.stock || 0;
+
+    setCart((prevCart) => {
+      const updatedCart = prevCart.map((item) => {
+        if (item.id === cartItemId.id) {
+          const newQuantity = Math.max(
+            1,
+            Math.min(item.quantity + amount, maxStock)
+          );
+          return { ...item, quantity: newQuantity };
+        }
+        return item;
+      });
+      return updatedCart;
+    });
+
     if (user && user.role === "customer") {
       try {
-        await axios.put(`${apiUrl}/cart/${cartItemId}`, {
+        await axios.put(`${apiUrl}/cart/${cartItemId.id}`, {
           user_id: user.id,
-          quantity: quantity,
+          quantity: Math.max(
+            1,
+            Math.min(cartItemId.quantity + amount, maxStock)
+          ),
         });
         fetchCartFromServer(user.id);
       } catch (error) {
         console.error("Failed to update quantity on server:", error);
       }
-    } else {
-      updateQuantity(cartItemId, parseInt(quantity));
     }
   };
 
@@ -108,6 +126,7 @@ export default function ShoppingCart() {
 
   return (
     <div className="flex flex-col w-full bg-white">
+      <ToastContainer />
       <div className="w-full h-16 bg-gray-100">
         <Navbar />
       </div>
@@ -146,24 +165,49 @@ export default function ShoppingCart() {
                           USD
                         </p>
                         <div className="mt-2 flex items-center space-x-4">
-                          <label
-                            htmlFor={`quantity-${item.id}`}
-                            className="text-sm font-medium text-gray-700"
-                          >
-                            Quantity
-                          </label>
-                          <input
-                            id={`quantity-${item.id}`}
-                            name={`quantity-${item.id}`}
-                            type="number"
-                            min="1"
-                            value={item.quantity}
-                            onChange={
-                              (e) =>
-                                handleQuantityChange(item.id, e.target.value) // Use cart item ID here
-                            }
-                            className="max-w-full rounded-md border border-gray-300 py-1.5 text-base leading-5 text-gray-700 shadow-sm"
-                          />
+                          <div className="flex items-center">
+                            <button
+                              onClick={() => handleQuantityChange(item, -1)}
+                              disabled={item.quantity <= 1}
+                              className={`px-2 py-1 border rounded-l-md ${
+                                item.quantity <= 1
+                                  ? "bg-gray-200 cursor-not-allowed"
+                                  : "bg-indigo-600 text-white hover:bg-indigo-700"
+                              }`}
+                            >
+                              -
+                            </button>
+                            <span className="px-4 py-1 border-t border-b">
+                              {item.quantity}
+                            </span>
+                            <button
+                              onClick={() => handleQuantityChange(item, 1)}
+                              disabled={
+                                item.quantity >=
+                                (productDetails[item.product_id]?.stock || 0)
+                              }
+                              className={`px-2 py-1 border rounded-r-md ${
+                                item.quantity >=
+                                (productDetails[item.product_id]?.stock || 0)
+                                  ? "bg-gray-200 cursor-not-allowed"
+                                  : "bg-indigo-600 text-white hover:bg-indigo-700"
+                              }`}
+                            >
+                              +
+                            </button>
+                          </div>
+                          {item.quantity >=
+                            (productDetails[item.product_id]?.stock || 0) &&
+                            productDetails[item.product_id]?.stock > 0 && (
+                              <p className="text-sm text-red-500 ml-4">
+                                Maximum stock reached
+                              </p>
+                            )}
+                          {productDetails[item.product_id]?.stock === 0 && (
+                            <p className="text-sm text-red-500 ml-4">
+                              Out of stock
+                            </p>
+                          )}
                         </div>
                       </div>
                       <div className="ml-auto">
@@ -206,38 +250,25 @@ export default function ShoppingCart() {
                     </p>
                   </div>
                   <div className="border-t border-gray-200 pt-4 flex justify-between">
-                    <p className="text-base font-medium text-gray-900">
-                      Order Total
-                    </p>
+                    <p className="text-base font-medium text-gray-900">Total</p>
                     <p className="text-base font-medium text-gray-900">
                       ${(subtotal + shippingEstimate + taxEstimate).toFixed(2)}
                     </p>
                   </div>
-                  <div className="mt-6">
-                    <Link
-                      to="/checkout"
-                      className="flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700"
-                    >
-                      Checkout
-                    </Link>
-                  </div>
-                  <div className="mt-4 flex justify-center text-sm text-gray-500">
-                    or{" "}
-                    <Link
-                      to="/products"
-                      className="text-indigo-600 font-medium hover:text-indigo-500"
-                    >
-                      Continue Shopping
-                      <span aria-hidden="true"> &rarr;</span>
-                    </Link>
-                  </div>
+                </div>
+                <div className="mt-6">
+                  <Link to="/checkout">
+                    <button className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">
+                      Proceed to Checkout
+                    </button>
+                  </Link>
                 </div>
               </div>
-              <Footer />
             </div>
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

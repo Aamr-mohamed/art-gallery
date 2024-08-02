@@ -14,7 +14,9 @@ export default function ProductDetails() {
   const [product, setProduct] = useState({});
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { cart, updateQuantity, removeFromCart, setCart, addToCart } =
+    useCart();
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -37,54 +39,83 @@ export default function ProductDetails() {
     getProduct();
   }, [apiUrl, navigate, productId]);
 
-  const handleAddToCart = async () => {
-    if (!product.id || !product.price || !product.name) {
-      customToast("error", "Product information is incomplete");
-      return;
-    }
-
-    const cartItem = {
-      product_id: product.id,
-      quantity: 1,
-      name: product.name,
-      price: product.price,
-      image: product.image,
-    };
-
-    const user = JSON.parse(localStorage.getItem("user"));
-
-    if (isLoggedIn && user && user.id) {
-      console.log("User is logged in. Adding item to server cart:", cartItem);
-      console.log("User is logged in. User ID:", user.id); // Log user ID
-
-      try {
-        await axios.post(
-          `${apiUrl}/cart`,
-          {
-            ...cartItem,
-            user_id: user.id, // Pass the user ID to the server
-          },
-          {
-            withCredentials: true,
-          }
-        );
-        customToast("success", "Item added to cart");
-      } catch (error) {
-        console.error("Failed to add item to server cart:", error);
-        customToast("error", "Failed to add item to cart");
-      }
-    } else {
-      console.log(
-        "User is not logged in or user data is missing. Adding item to local storage cart:",
-        cartItem
-      );
-      addToCart(cartItem);
-      customToast("success", "Item added to cart");
+  const fetchCartFromServer = async (userId) => {
+    try {
+      const response = await axios.get(`${apiUrl}/cart`, {
+        params: { user_id: userId },
+        withCredentials: true,
+      });
+      const cartWithIds = response.data.cart.map((item) => ({
+        ...item,
+        id: item.id,
+      }));
+      setCart(cartWithIds);
+    } catch (error) {
+      console.error("Failed to fetch cart from server:", error);
     }
   };
 
+  const handleAddToCart = async () => {
+    const existingItemIndex = cart.findIndex(
+      (item) => item.product_id === product.id
+    );
+    let updatedCart = [...cart];
 
+    const existingItem =
+      existingItemIndex > -1 ? cart[existingItemIndex] : null;
+    const totalQuantity = existingItem
+      ? existingItem.quantity + quantity
+      : quantity;
 
+    if (totalQuantity > product.stock) {
+      alert(`You have already added ${product.stock} items from this product reaching the max stock available.`);
+      return;
+    }
+
+    if (existingItemIndex > -1) {
+      // Update the quantity of the existing item
+      updatedCart = cart.map((item, index) => {
+        if (index === existingItemIndex) {
+          return { ...item, quantity: totalQuantity };
+        }
+        return item;
+      });
+    } else {
+      // Add new item to the cart
+      updatedCart = [...cart, { product_id: product.id, quantity }];
+    }
+
+    setCart(updatedCart);
+
+    // update server-side cart if needed
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user && user.role === "customer") {
+      try {
+        await axios.post(`${apiUrl}/cart`, {
+          user_id: user.id,
+          product_id: product.id,
+          quantity,
+        });
+      } catch (error) {
+        console.error("Failed to add item to server cart:", error);
+      }
+    } else {
+      // Update local storage
+      localStorage.setItem("cart", JSON.stringify(updatedCart));
+    }
+
+    // show a success message or notification
+    customToast("success", "Item added to cart");
+  };
+
+  const handleQuantityChange = (amount) => {
+    setQuantity((prevQuantity) => {
+      const newQuantity = prevQuantity + amount;
+      if (newQuantity < 1) return 1;
+      if (newQuantity > product.stock) return product.stock;
+      return newQuantity;
+    });
+  };
 
   return (
     <div>
@@ -147,12 +178,44 @@ export default function ProductDetails() {
                     <h2 className="text-sm font-medium tracking-tight text-gray-900 mt-8">
                       In Stock: {product.stock}
                     </h2>
+                    <div className="flex items-center mt-4">
+                      <button
+                        onClick={() => handleQuantityChange(-1)}
+                        disabled={quantity <= 1}
+                        className={`px-2 py-1 border rounded-l-md ${
+                          quantity <= 1
+                            ? "bg-gray-200 cursor-not-allowed"
+                            : "bg-indigo-600 text-white hover:bg-indigo-700"
+                        }`}
+                      >
+                        -
+                      </button>
+                      <span className="px-4 py-1 border-t border-b">
+                        {quantity}
+                      </span>
+                      <button
+                        onClick={() => handleQuantityChange(1)}
+                        disabled={quantity >= product.stock}
+                        className={`px-2 py-1 border rounded-r-md ${
+                          quantity >= product.stock
+                            ? "bg-gray-200 cursor-not-allowed"
+                            : "bg-indigo-600 text-white hover:bg-indigo-700"
+                        }`}
+                      >
+                        +
+                      </button>
+                    </div>
                     <button
-                      onClick={handleAddToCart}
+                      onClick={() => handleAddToCart(product.id)}
                       type="button"
-                      className="mt-10 flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                      disabled={product.stock === 0}
+                      className={`mt-4 flex w-full items-center justify-center rounded-md border border-transparent px-8 py-3 text-base font-medium text-white ${
+                        product.stock === 0
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                      }`}
                     >
-                      Add to Cart
+                      {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
                     </button>
                   </div>
                 </div>
